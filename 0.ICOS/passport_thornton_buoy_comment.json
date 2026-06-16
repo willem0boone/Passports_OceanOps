@@ -20,6 +20,8 @@
     },
     "patch": {
       "name": "ICOS STATION Thornton Buoy",
+       "comments": "test",
+
       "identification": {
         "weblinks": {
           "set": [

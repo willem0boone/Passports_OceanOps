@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "sourceText": "VLIZ test",
+    "ingestionMethodId": 4,
+    "contactId": 0,
+    "observedAt": "2026-03-12T14:30:00Z"
+  },
+  "options": {
+    "mode": "UPSERT",
+    "dryRun": false,
+    "createIfMissing": {
+      "platform": false,
+      "sensorSetups": false
+    }
+  },
+  "platform": {
+    "match": {
+      "wigosId": "0-22000-0-6204817"
+    },
+    "patch": {
+      "name": "ICOS STATION Thornton Buoy",
+
+      "identification": {
+        "internalId": "007",
+        "weblinks": {
+          "set": [
+            {
+              "name": "ICOS STATION: Thornton Buoy",
+              "url": "https://meta.icos-cp.eu/resources/stations/OS_1199",
+              "topic": {
+                "code": "project-info"
+              }
+            },
+            {"name": "ICOS data portal",
+              "url": "https://data.icos-cp.eu/portal/#%7B%22filterCategories%22%3A%7B%22station%22%3A%5B%22iOS_1199%22%5D%2C%22level%22%3A%5B1%2C2%5D%7D%7D",
+              "topic": {
+                "code": "os-data"
+              }
+            }
+          ]
+        }
+      },
+      "deployment": {
+        "date": "2018-11-30T00:00:00Z",
+        "latitude": 51.57989,
+        "longitude": 2.993217
+      }
+    }
+  },
+  "contactContributions": [
+    {
+      "contactId": 1022493,
+      "roles": ["principal-investigator"]
+    },
+    {
+      "contactId": 1021773,
+      "roles": ["i-t-engineer"]
+    }
+  ],
+  "agencyContributions": [
+    {
+      "agencyId": 1001497,
+      "roles": ["owning-agency", "operating-agency", "data-assembly-center"]
+    }
+  ]
+}
