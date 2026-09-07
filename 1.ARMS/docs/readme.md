@@ -2,125 +2,89 @@
 
 ## Part 1: pull ARMS metadata from ETN
 
-ARMS data is pulled from ETN using ETN R-package.
-- The filter parameters are stored in the yaml file.
-- The credentials are stored in .Renviron file.
+ARMS data is pulled from ETN with `1.extract_ETN_ARMS.py`.
+- Credentials come from `.Renviron`.
+- The filter parameters live in the ETN request payload.
 
-The R code is wrapped in Python for creating a single language pipeline.
-
-The output is a csv file with "variable args":
-- the ARMS deployments 
-- station name
-- ETN id
-- lat
-- lon
-- deploy_date
-- retrieval_date
-
-Variable args are expected to change, new records will appear, retrieval dates might be added.
+The output is `etn_arms_export/deployments_ARMS.json` with the variable fields used downstream:
+- deployment_id
+- receiver_id
+- station_name
+- deploy_latitude
+- deploy_longitude
+- deploy_date_time
+- recover_date_time
 
 ```mermaid
 flowchart TB
 
-A((Operators)) --> id1[(ETN database)]
-
-    
-
-id1--> B[/"Extract_ETN_ARMS.py"/]
-B --> C["deployments.json (variable args)"]
-
+A((Operators)) --> B[(ETN service)]
+B --> C[1.extract_ETN_ARMS.py]
+C --> D[deployments_ARMS.json]
 ```
-## Part 2: create passport
 
-The variable args are merged with static args (e.g. contacts, sensor names). 
+## Part 2: create passports
 
-Before creating a json file, it is verified if this platform already exists. 
-This is done by assessing whether lat/lon/deploy_data/station_name are unique. 
+The deployment export is merged with static config from `scripts/config/config_passports.json` in `2.form_passports.py`.
+Before writing a file, the script queries OceanOPS by `receiver_id` and program to see whether a matching platform already exists.
 
-- In case the passport already exists, the existing file is updated. The filename is ```ETN_{ETN_id}_WIGOS_{WIGOS_id}.json```
-- In case the passport does not yet exists, it is created. The filename is ```ETN_{ETN_id}_WIGOS_NONE.json```
-
-For now the check is done using the json files already in passports directory. 
-Ideally, this check would assess existence in OceanOps itself. 
-
-! This means that you need to have all previously created passports in that directory. 
-<br> 
-Otherwise the assessment will show they do not yet exist and create passports with new WIGOS-IDs.
+- Match found: update the passport payload and write `ETN_*receverId*_WIGOS_*wigosID*.json`
+- No match: write `ETN_*receverId*_WIGOS_NONE.json`
 
 ```mermaid
 flowchart TB
 
-E["deployments.json (variable args)"]
+D[deployments_ARMS.json]
+E[config_passports.json]
+F[2.form_passports.py]
 
+D --> F
+E --> F
 
-F["config.json (static args)"]
-
-G[/Python: create_passport.py/]
-
-E --> G
+G{OceanOPS match found?}
 F --> G
 
-H{Passport already exists?}
+G -- Yes --> H[Write ETN_*receverId*_WIGOS_*wigosID*.json]
+G -- No --> I[Write ETN_*receverId*_WIGOS_NONE.json]
 
-G --> H
+J[(passports/)]
+H --> J
+I --> J
+```
 
+## Part 3: assign WIGOS-ID if missing
 
-H -- No -->  K["Create new passport
- (without wigos-id)"]
+`3.assign_missing_wigos.py` scans `passports/` for `WIGOS_NONE` files, asks for confirmation, then requests a real WIGOS ID from OceanOPS and renames the passport.
 
-H -- Yes --> I[Update existing passport.json]
+```mermaid
+flowchart TB
 
-L[(Passports Directory)]
+J[(passports/)]
+K[passport with WIGOS_NONE]
+J --> K
 
+L{WIGOS missing?}
 K --> L
-I --> L
-H <--> M[verify if exist]
-M <--> L
+
+L -- Yes --> M[Confirm in CLI]
+M --> N[Request WIGOS ID]
+N --> O[Rename passport file]
+O --> J
+
+L -- No --> P[Skip]
 ```
 
-## Part 3: Assign WIGOS-ID if missing
-For new passports a new WIGOS-ID is requested and assigned in the json field and in the filename.
-You will need to confirm in the command line every time before a new WIGOS ID will be created.
-All passports have now a name like ```ETN_{ETN_id}_WIGOS_{WIGOS_id}.json```
+## Part 4: push passports
+
+`4.push_passports.py` sends each passport from `passports/` to OceanOPS.
 
 ```mermaid
 flowchart TB
 
-L[(Passports Directory)]
-N["passport.json"]
+J[(passports/)]
+Q[4.push_passports.py]
+R[(OceanOPS)]
 
-O{"has wigos? "}
-
-L --> N
-N --> O
-
-O -- No --> O1 --> N
-
-%% -------------------------
-%% Section 3: oceanopsclient
-%% -------------------------
-subgraph OceanOpsClient
-    O1[post_wigos_id]
-end
-
-```
-
-## Part 4: Push passports
-
-Pushing the passport.json to OceanOps.
-
-```mermaid
-flowchart TB
-
-L[(Passports Directory)]
-N["passport.json"]
-
-L --> N
-
-subgraph OceanOpsClient
-    O2[post_passport]
-end
-
-N --> O2
-
+J --> Q
+Q --> R
 ```

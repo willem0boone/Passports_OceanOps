@@ -1,3 +1,5 @@
+# ARMS sync flow
+
 ```mermaid
 flowchart TB
 
