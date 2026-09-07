@@ -8,7 +8,7 @@
             "creatorId": null,
             "dataUrl": null,
             "deleteTag": null,
-            "description": "Moored surface buoy that serves both ERICs ICOS and LifeWatch. The buoy is equipped with sensors for pCO2, dissolved oxygen, temperature, salinity, fluorescence (chl-a), turbidity, passive acoustic receiver. Sensors are deployed approx 1m below sea surface. Station is visited on a monthly basis in order to collect samples for validation/calibration of sensors and maintain/replace equipment. Station has a secure and stable communication with VLIZ servers for NRT data transmission and overall interactive communication with in situ equipment",
+            "description": "Moored surface buoy that serves both ERICs ICOS and LifeWatch. The buoy is equipped with sensors for pCO2, dissolved oxygen, temperature, salinity, fluorescence (chl-a), turbidity, passive acoustic receiver. Sensors are deployed approx 1m below sea surface. Station is visited on a monthly basis in order to collect samples for validation/calibration of sensors and maintain/replace equipment. Station has a secure and stable communication with VLIZ servers for NRT data transmission and overall interactive communication with in situ equipment.",
             "eNotificationDate": null,
             "endingDate": null,
             "ingestionMethodId": null,
@@ -23,7 +23,7 @@
             "ref": "6204817",
             "refParent": null,
             "sourceText": null,
-            "updateDate": "2026-02-16T08:06:10.511361",
+            "updateDate": "2026-06-30T09:49:51.221254",
             "validated": null,
             "wigosSynchronised": null
         }

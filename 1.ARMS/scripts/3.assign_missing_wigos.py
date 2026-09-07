@@ -1,9 +1,10 @@
 import os
 import json
+from pathlib import Path
 
-from utils import generate_wigos_id
+from utils import request_wigos_id
 
-PASSPORT_DIR = "../passports"
+PASSPORT_DIR = Path(__file__).resolve().parent.parent / "passports"
 
 
 def _extract_summary(passport):
@@ -59,7 +60,7 @@ def assign_wigos_ids():
 
         etn_id = filename.split("_")[1]
 
-        filepath = os.path.join(PASSPORT_DIR, filename)
+        filepath = PASSPORT_DIR / filename
 
         try:
             with open(filepath, "r") as f:
@@ -99,14 +100,18 @@ def assign_wigos_ids():
             continue
 
         # -----------------------------------------------------------
-        # Assign WIGOS
+        # Assign WIGOS via OceanOPS request-id API
         # -----------------------------------------------------------
-        new_wigos = generate_wigos_id()
+        try:
+            new_wigos = request_wigos_id(passport)
+        except Exception as exc:
+            print(f"Failed to request WIGOS ID for {filename}: {exc}")
+            continue
 
         passport["platform"]["match"]["wigosId"] = new_wigos
 
         new_filename = f"ETN_{etn_id}_WIGOS_{new_wigos}.json"
-        new_filepath = os.path.join(PASSPORT_DIR, new_filename)
+        new_filepath = PASSPORT_DIR / new_filename
 
         try:
             with open(new_filepath, "w") as f:

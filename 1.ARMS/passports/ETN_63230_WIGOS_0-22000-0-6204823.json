@@ -4,7 +4,7 @@
     "sourceText": "-----test-----",
     "ingestionMethodId": 4,
     "contactId": 1021773,
-    "observedAt": "2026-04-13T12:24:24Z"
+    "observedAt": "2026-09-07T08:34:52Z"
   },
   "options": {
     "mode": "UPSERT",
@@ -16,17 +16,20 @@
   },
   "platform": {
     "match": {
-      "wigosId": null
+      "wigosId": "0-22000-0-6204823"
     },
     "patch": {
       "name": "CPowerReefballs-EMOBON",
       "deployment": {
-        "date": "2024-07-18T09:11:00Z",
-        "latitude": 51.5806,
-        "longitude": 2.9959
+        "date": "2023-10-23T12:00:00Z",
+        "latitude": 51.5798,
+        "longitude": 2.9955
       },
       "retrieval": {
-        "endDate": "2025-06-11T00:00:00Z"
+        "endDate": "2024-07-18T00:00:00Z"
+      },
+      "identification": {
+        "internalId": "VR2AR-549588"
       }
     }
   },

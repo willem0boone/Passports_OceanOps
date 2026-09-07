@@ -1,4 +1,5 @@
 icoscp
 pandas
 pyyaml
+requests
 git+https://github.com/amrit-eu/OceanOpsClient

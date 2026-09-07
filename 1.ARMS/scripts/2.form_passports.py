@@ -1,29 +1,44 @@
 import os
-import pandas as pd
 import json
+import requests
+from pathlib import Path
 
 from utils import (
-    generate_wigos_id,  # only for temp filename now
     create_passport,
-    update_passport,
     build_full_passport,
+    extract_wigos_id,
     safe_chr
 )
 
-from is_in_oops import validate_exists
 
+# setup dir
+SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = SCRIPT_DIR.parent / "passports"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-OUTPUT_DIR = "../passports"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+ARM_EXPORT_PATH = SCRIPT_DIR.parent / "etn_arms_export" / "deployments_ARMS.json"
+CONFIG_PATH = SCRIPT_DIR / "config" / "config_passports.json"
 
-with open("../etn_arms_export/deployments_ARMS.json", "r") as f:
+for passport_path in OUTPUT_DIR.glob("*.json"):
+    passport_path.unlink()
+
+# OceanOPS API settings
+OCEANOPS_API_ENDPOINT = "https://www.ocean-ops.org/api/data/passports/search"
+PROGRAM = "1006674"   # OceanOps VLIZ-ARMS-MBON
+
+# get ARMS info
+with open(ARM_EXPORT_PATH, "r") as f:
     arms = json.load(f)
 
-with open("config/config_passports.json", "r") as f:
+with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
-
+# loop over every ARMS deployment
 for row in arms:
+
+    print("-"*20)
+    print(row)
+    print("-"*20)
 
     deployment_id = safe_chr(row.get("deployment_id"))
 
@@ -33,33 +48,51 @@ for row in arms:
 
     print(f"\nProcessing ETN: {deployment_id}")
 
-    lat = row.get("deploy_latitude")
-    lon = row.get("deploy_longitude")
-    name = row.get("station_name")
-    date = row.get("deploy_date_time")
+    receiver_id = row.get("receiver_id")
 
-    exists, filepath, passport = validate_exists(lat, lon, name, date)
-
-    # ---------------------------------------------------------------
-    # CASE 1: Exists → update
-    # ---------------------------------------------------------------
-    if exists:
-        print(f"Match found → updating {os.path.basename(filepath)}")
-        update_passport(filepath, row, config)
+    # Query OceanOPS API for existing passport
+    if receiver_id:
+        try:
+            payload = {
+                "internalIds": [receiver_id],
+                "filters": {
+                    "programs": PROGRAM
+                }
+            }
+            response = requests.post(OCEANOPS_API_ENDPOINT, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            # Extract first passport if found
+            passport = data.get("items", [])[0] if data.get("items") else None
+        except Exception as e:
+            print(f"Error querying OceanOPS API: {e}")
+            passport = None
+    else:
+        print("Skipping row: missing receiver_id")
         continue
 
     # ---------------------------------------------------------------
-    # CASE 2: New → create WITHOUT WIGOS
+    # CASE 1: Exists in database - update with deployment data & save
     # ---------------------------------------------------------------
-    print("No match found → creating NEW (no WIGOS yet)")
+    if passport:
+        print(f"Match found in OceanOPS - updating with deployment data")
+        wigos_id = extract_wigos_id(passport)
+        passport = build_full_passport(row, config, wigos_id=wigos_id)
 
-    temp_id = generate_wigos_id()  # just for filename
+        etn_id = deployment_id
+        filename = f"ETN_{etn_id}_WIGOS_{passport.get('platform', {}).get('match', {}).get('wigosId', 'NONE')}.json"
+        filepath = OUTPUT_DIR / filename
+        
+        create_passport(filepath, passport)
+        continue
 
-    json_obj = build_full_passport(row, config, wigos_id=None)
+    # ---------------------------------------------------------------
+    # CASE 2: New - create WITHOUT WIGOS
+    # ---------------------------------------------------------------
+    print("No match found in OceanOPS - creating NEW (no WIGOS yet)")
 
     etn_id = deployment_id
-
+    json_obj = build_full_passport(row, config, wigos_id=None)
     filename = f"ETN_{etn_id}_WIGOS_NONE.json"
-    filepath = os.path.join(OUTPUT_DIR, filename)
-
+    filepath = OUTPUT_DIR / filename
     create_passport(filepath, json_obj)

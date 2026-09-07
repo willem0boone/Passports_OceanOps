@@ -1,3 +1,8 @@
+"""
+makes a query in https://lifewatch.be/etn/deployments to extact all stations
+that include emobon in their name from BPNS project.
+"""
+
 import requests
 import json
 import os
