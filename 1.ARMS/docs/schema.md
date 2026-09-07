@@ -3,27 +3,28 @@
 ```mermaid
 flowchart TB
 
-A((Operators)) --> B[1.extract_ETN_ARMS.py]
-B --> C[deployments_ARMS.json]
+A((Operators)) --> B[(ETN service)]
+B --> C[1.extract_ETN_ARMS.py]
+C --> D[deployments_ARMS.json]
 
-C --> D[2.form_passports.py]
-E[config_passports.json] --> D
+D --> E[2.form_passports.py]
+F[config_passports.json] --> E
 
-D --> F{Match found in OceanOPS?}
-F -- Yes --> G[Write ETN_*receverId*_WIGOS_*wigosID*.json]
-F -- No --> H[Write ETN_*receverId*_WIGOS_NONE.json]
+E --> G{Match found in OceanOPS?}
+G -- Yes --> H[Write ETN_*receverId*_WIGOS_*wigosID*.json]
+G -- No --> I[Write ETN_*receverId*_WIGOS_NONE.json]
 
-G --> I[(passports/)]
-H --> I
+H --> J[(passports/)]
+I --> J
 
-I --> J[3.assign_missing_wigos.py]
-J --> K{WIGOS missing?}
-K -- Yes --> L[Request WIGOS ID]
-L --> M[Rename passport]
-K -- No --> N[Skip]
+J --> K[3.assign_missing_wigos.py]
+K --> L{WIGOS missing?}
+L -- Yes --> M[Request WIGOS ID]
+M --> N[Rename passport]
+L -- No --> O[Skip]
 
-M --> I
+N --> J
 
-I --> O[4.push_passports.py]
-O --> P[(OceanOPS)]
+J --> P[4.push_passports.py]
+P --> Q[(OceanOPS)]
 ```
